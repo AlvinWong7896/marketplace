@@ -23,11 +23,11 @@ def new(request):
 
         if form.is_valid():
             item = form.save(commit=False)
-            item.create_by = request.user
+            item.created_by = request.user
             item.save()
 
             return redirect("item:detail", pk=item.id)
     else:
-        form = NewItemForm
+        form = NewItemForm()
 
     return render(request, "item/form.html", {"form": form, "title": "New item"})
