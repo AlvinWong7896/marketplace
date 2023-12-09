@@ -27,7 +27,7 @@ def signup(request):
 
         if form.is_valid():
             form.save()
-            return redirect("/login/")
+            return redirect("/login/")  # Redirect only if the form is valid
     else:
         form = SignupForm()
 

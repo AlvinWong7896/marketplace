@@ -45,3 +45,16 @@ class SignupForm(UserCreationForm):
             }
         )
     )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get("password1")
+        password2 = cleaned_data.get("password2")
+
+        # Check if passwords match
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError(
+                "Passwords do not match. Please enter the same password in both fields"
+            )
+
+        return cleaned_data
