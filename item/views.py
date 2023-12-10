@@ -1,3 +1,4 @@
+import time
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 
@@ -25,8 +26,9 @@ def new(request):
             item = form.save(commit=False)
             item.created_by = request.user
             item.save()
+            # time.sleep(5)        # To debug why image unable to load
 
-            return redirect("item:detail", pk=item.id)
+            return redirect("item:detail", pk=1)  # pk=item.id, unable to load image
     else:
         form = NewItemForm()
 
