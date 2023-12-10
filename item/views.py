@@ -1,9 +1,34 @@
 import time
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.shortcuts import render, get_object_or_404, redirect
 
-from .forms import NewItemForm
-from .models import Item
+from .forms import NewItemForm, EditItemForm
+from .models import Category, Item
+
+
+def items(request):
+    query = request.GET.get("query", "")
+    category_id = request.GET.get("category", 0)
+    categories = Category.objects.all()
+    items = Item.objects.filter(is_sold=False)
+
+    if category_id:
+        items = items.filter(category_id=category_id)
+
+    if query:
+        items = items.filter(Q(name_icontains=query) | Q(description_icontains=query))
+
+    return render(
+        request,
+        "item/items.html",
+        {
+            "items": items,
+            "query": query,
+            "categories": categories,
+            "category_id": int(category_id),
+        },
+    )
 
 
 def detail(request, pk):
@@ -28,8 +53,49 @@ def new(request):
             item.save()
             # time.sleep(5)        # To debug why image unable to load
 
-            return redirect("item:detail", pk=1)  # pk=item.id, unable to load image
+            return redirect(
+                "item:detail", pk=item.id
+            )  # pk=item.id, unable to load image
     else:
         form = NewItemForm()
 
-    return render(request, "item/form.html", {"form": form, "title": "New item"})
+    return render(
+        request,
+        "item/form.html",
+        {
+            "form": form,
+            "title": "New item",
+        },
+    )
+
+
+@login_required
+def delete(request, pk):
+    item = get_object_or_404(Item, pk=pk, created_by=request.user)
+    item.delete()
+
+    return redirect("dashboard:index")
+
+
+@login_required
+def edit(request, pk):
+    item = get_object_or_404(Item, pk=pk, created_by=request.user)
+
+    if request.method == "POST":
+        form = EditItemForm(request.POST, request.FILES, instance=item)
+
+        if form.is_valid():
+            item.save()
+
+            return redirect("item:detail", pk=item.id)
+    else:
+        form = EditItemForm(instance=item)
+
+    return render(
+        request,
+        "item/form.html",
+        {
+            "form": form,
+            "title": "Edit item",
+        },
+    )
